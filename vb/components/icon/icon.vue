@@ -15,13 +15,23 @@
                 type: String,
                 require: true,
             },
+            aaa: {
+                type: String,
+                require: true,
+            },
             spin: {
                 type: Boolean,
                 default: false,
             },
         },
+        watch: {
+            aaa(r) {
+                console.log(r);
+            },
+        },
         computed: {
             iconClasses() {
+                console.log(this.type);
                 return [
                     this.prefix,
                     `${this.prefix}-${this.type}`,

@@ -1,6 +1,7 @@
 import Vue from 'vue';
 import vMessage from './message.vue';
 
+console.log(vMessage);
 vMessage.newInstance = (data) => {
     const div = document.createElement('div');
     div.innerHTML = `<v-message :top='${data.top}' :duration='${data.duration}'></v-message>`;
@@ -28,5 +29,4 @@ vMessage.newInstance = (data) => {
         },
     };
 };
-
 export default vMessage;

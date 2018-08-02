@@ -28,6 +28,7 @@
                                     <a class="ant-calendar-next-year-btn" :title="t('datePicker.nextMonth')" @click="changeYear(1,no)"></a>
                                 </div>
                                 <div class="ant-calendar-body">
+                                    <slot></slot>
                                     <table class="ant-calendar-table" cellspacing="0" role="grid">
                                         <thead>
                                             <tr>
@@ -39,7 +40,7 @@
                                         <template v-if="$data['date'+no]">
                                             <tbody class="ant-calendar-tbody">
                                                 <tr v-for="i in 6">
-                                                    <td v-for="j in 7" :title="$data['date'+no][(i-1) * 7 + j - 1].title" :class="[prefix+'-cell',$data['date'+no][(i-1) * 7 + j - 1].status]" @click="select($data['date'+no][(i-1) * 7 + j - 1], no)">
+                                                    <td v-for="j in 7" :title="$data['date'+no][(i-1) * 7 + j - 1].title" :class="[prefix+'-cell',$data['date'+no][(i-1) * 7 + j - 1].status, videoClassName($data['date'+no][(i-1) * 7 + j - 1].title)]" @click="select($data['date'+no][(i-1) * 7 + j - 1], no)">
                                                         <div v-text="$data['date'+no][(i-1) * 7 + j - 1].text" :class="prefix+'-date'" aria-selected="false" aria-disabled="false">18</div>
                                                     </td>
                                                 </tr>
@@ -119,6 +120,10 @@
                 type: Boolean,
                 default: false,
             },
+            maxRangeType: {
+                type: [String, Number],
+                default: '',
+            },
             size: String,
             // 输入的时间
             value: {
@@ -163,6 +168,14 @@
             disabledTime: {
                 type: Array,
                 default: () => [{}, {}],
+            },
+            rangeSelect: {
+                type: Array,
+                default: () => [],
+            },
+            showDate: {
+                type: Array,
+                default: () => [],
             },
         },
         data() {
@@ -296,6 +309,10 @@
             },
         },
         methods: {
+            videoClassName(res) {
+                const obj = this.showDate.find(item => item.date === res);
+                return obj ? 'has-video-20180725' : 'no-video-20180725';
+            },
             setTimeVal() {
                 const temp = ['00:00', '00:00'];
                 if (this.range) {
@@ -353,57 +370,133 @@
                 }
                 return null;
             },
+            getSelectTime(type) {
+                let time = new Date();
+                const selectBtn = {
+                    today: () => (
+                        {
+                            name: '今天',
+                            start: this.parse(time, false),
+                            end: this.parse(time, true),
+                            active: true,
+                        }
+                    ),
+                    yestoday: () => {
+                        time.setDate(time.getDate() - 1);
+                        return {
+                            name: '昨天',
+                            start: this.parse(time, false),
+                            end: this.parse(time, true),
+                        };
+                    },
+                    recent7: () => {
+                        time = new Date();
+                        time.setDate(time.getDate() - 6);
+                        return {
+                            name: '最近7天',
+                            start: this.parse(time, false),
+                            end: this.parse(new Date(), true),
+                        };
+                    },
+                    month: () => {
+                        time = new Date();
+                        time.setMonth(time.getMonth() + 1, 0);
+                        return {
+                            name: '本月',
+                            start: new Date(time.getFullYear(), time.getMonth(), 1),
+                            end: this.parse(time, true),
+                        };
+                    },
+                    lastMonth: () => {
+                        time = new Date();
+                        time.setMonth(time.getMonth(), 0);
+                        return {
+                            name: '上个月',
+                            start: new Date(time.getFullYear(), time.getMonth(), 1),
+                            end: this.parse(time, true),
+                        };
+                    },
+                    recentMonth: () => {
+                        time = new Date();
+                        time.setDate(time.getDate() - 29);
+                        return {
+                            name: '最近一个月',
+                            start: this.parse(time, false),
+                            end: this.parse(new Date(), true),
+                        };
+                    },
+                    year: () => {
+                        time = new Date();
+                        time.setDate(time.getDate() - 365);
+                        return {
+                            name: '最近一年',
+                            start: this.parse(time, false),
+                            end: this.parse(new Date(), true),
+                        };
+                    },
+                };
+                return selectBtn[type]();
+            },
             // 初始化时间范围
             initRanges() {
-                let time = new Date();
-                const ranges = [];
-                ranges.push({
-                    name: '今天',
-                    start: this.parse(time, false),
-                    end: this.parse(time, true),
-                    active: true,
-                });
-                time.setDate(time.getDate() - 1);
-                ranges.push({
-                    name: '昨天',
-                    start: this.parse(time, false),
-                    end: this.parse(time, true),
-                });
-                time = new Date();
-                time.setDate(time.getDate() - 6);
-                ranges.push({
-                    name: '最近7天',
-                    start: this.parse(time, false),
-                    end: this.parse(new Date(), true),
-                });
-                time = new Date();
-                time.setMonth(time.getMonth() + 1, 0);
-                ranges.push({
-                    name: '本月',
-                    start: new Date(time.getFullYear(), time.getMonth(), 1),
-                    end: this.parse(time, true),
-                });
-                time = new Date();
-                time.setMonth(time.getMonth(), 0);
-                ranges.push({
-                    name: '上个月',
-                    start: new Date(time.getFullYear(), time.getMonth(), 1),
-                    end: this.parse(time, true),
-                });
-                time = new Date();
-                time.setDate(time.getDate() - 29);
-                ranges.push({
-                    name: '最近一个月',
-                    start: this.parse(time, false),
-                    end: this.parse(new Date(), true),
-                });
-                time = new Date();
-                time.setDate(time.getDate() - 365);
-                ranges.push({
-                    name: '最近一年',
-                    start: this.parse(time, false),
-                    end: this.parse(new Date(), true),
-                });
+                const typeArr = ['today', 'yestoday', 'recent7', 'month', 'lastMonth', 'recentMonth', 'year'];
+                const userType = this.rangeSelect.length ? this.rangeSelect : typeArr;
+                console.log(userType);
+                const ranges = userType.map(item => this.getSelectTime(item));
+                console.log(ranges);
+                // ranges.push({
+                //     name: '今天',
+                //     start: this.parse(time, false),
+                //     end: this.parse(time, true),
+                //     active: true,
+                // });
+
+                // time.setDate(time.getDate() - 1);
+                // ranges.push({
+                //     name: '昨天',
+                //     start: this.parse(time, false),
+                //     end: this.parse(time, true),
+                // });
+
+                // time = new Date();
+                // time.setDate(time.getDate() - 6);
+                // ranges.push({
+                //     name: '最近7天',
+                //     start: this.parse(time, false),
+                //     end: this.parse(new Date(), true),
+                // });
+
+                // time = new Date();
+                // time.setMonth(time.getMonth() + 1, 0);
+                // ranges.push({
+                //     name: '本月',
+                //     start: new Date(time.getFullYear(), time.getMonth(), 1),
+                //     end: this.parse(time, true),
+                // });
+
+                // time = new Date();
+                // time.setMonth(time.getMonth(), 0);
+                // ranges.push({
+                //     name: '上个月',
+                //     start: new Date(time.getFullYear(), time.getMonth(), 1),
+                //     end: this.parse(time, true),
+                // });
+
+                // time = new Date();
+                // time.setDate(time.getDate() - 29);
+                // ranges.push({
+                //     name: '最近一个月',
+                //     start: this.parse(time, false),
+                //     end: this.parse(new Date(), true),
+                // });
+
+                // time = new Date();
+                // time.setDate(time.getDate() - 365);
+                // ranges.push({
+                //     name: '最近一年',
+                //     start: this.parse(time, false),
+                //     end: this.parse(new Date(), true),
+                // });
                 this.ranges = ranges;
             },
             // 更新所有的日历
@@ -687,6 +780,7 @@
                 no === 2 && now.setMonth(now.getMonth() + 1, 0);
                 this[`now${no}`] = new Date(now);
                 this.hidePanel();
+                this.$emit('monthChange', this[`now${no}`]);
             },
             // 改变月份
             changeMonth(flag, no) {
@@ -696,6 +790,7 @@
                 no === 2 && now.setMonth(now.getMonth() + 1, 0);
                 this[`now${no}`] = new Date(now);
                 this.hidePanel();
+                this.$emit('monthChange', this[`now${no}`]);
             },
             // 选择年份
             selectYear(index, no) {

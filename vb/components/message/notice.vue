@@ -2,14 +2,13 @@
     <div class="ant-message-notice" transition="message">
         <div class="ant-message-notice-content">
             <div :class="[`${prefixCls}-custom-content ${prefixCls}-${type}`]">
-                <icon v-if="type" :type="iconType"></icon>
+                <i v-show="type" :class="iconClasses"></i>
                 <span v-text="content"></span>
             </div>
         </div>
     </div>
 </template>
 <script>
-import icon from '../icon';
 
 export default {
     props: {
@@ -34,6 +33,8 @@ export default {
     data() {
         return {
             prefixCls: 'ant-message',
+            spin: false,
+            prefix: 'anticon',
         };
     },
     computed: {
@@ -45,6 +46,13 @@ export default {
                 error: 'exclamation-circle',
                 loading: 'loading',
             })[this.type];
+        },
+        iconClasses() {
+            return [
+                this.prefix,
+                `${this.prefix}-${this.iconType}`,
+                { [`${this.prefix}-spin`]: this.spin || this.iconType === 'loading' },
+            ];
         },
     },
     mounted() {
@@ -72,7 +80,6 @@ export default {
         },
     },
     components: {
-        icon,
     },
 };
 </script>
